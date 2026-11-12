@@ -72,3 +72,4 @@ database/
 tests/
   Unit/             - Pruebas unitarias (12 tests)
 ```
+# Ajuste menor para PR
