@@ -1,55 +1,74 @@
 # Sistema para Repostería
 
-Sistema CLI ligero y autocontenido (Python stdlib + SQLite) para gestionar una repostería.
+Sistema completo de gestión para repostería construido con **Laravel 11**, **Filament 3** y **SQLite**. Incluye panel de administración para clientes, inventario, recetas, pedidos y facturas.
 
 ## Alcance
-- **Clientes:** alta y listado.
+- **Clientes:** alta, edición y listado.
 - **Inventario:** insumos con unidad, costo y cantidad; ajustes de stock.
 - **Recetas:** ingredientes por insumo, rendimiento, costo total/unitario y precio sugerido (cotización con margen).
-- **Pedidos:** cotización, creación (borrador o confirmado con descuento de inventario) y consulta.
-- **Facturas:** emisión desde pedido confirmado/borrador registrado y consulta.
+- **Pedidos:** cotización, creación (borrador o confirmado con descuento automático de inventario) y consulta.
+- **Facturas:** emisión desde pedidos confirmados, numeración única y consulta.
 
-> Nota: la idea original sugería PHP/Laravel/Filament; se implementó con stack ligero (Python stdlib + SQLite) según `AGENTS.md`, cubriendo el mismo alcance funcional.
+## Stack
+- PHP 8.3+
+- Laravel 11
+- Filament 3 (panel de administración)
+- SQLite (base de datos en un solo archivo)
+- PHPUnit (pruebas automatizadas)
 
 ## Requisitos
-- Python 3.12+ (solo biblioteca estándar)
+- PHP 8.3+
+- Composer
+- Extensiones PHP: sqlite3, mbstring, bcmath, etc.
 
-## Uso
-Desde el directorio del proyecto:
-
+## Instalación
 ```bash
-# Inicializar base de datos (por defecto ./reposteria.db)
-python3 -m reposteria init-db
+# Clonar el repositorio
+git clone https://github.com/gregorioescobar/sistema-reposteria.git
+cd sistema-reposteria
 
-# Clientes
-python3 -m reposteria customer add --name "Ana" --phone "555-0101" --email ana@example.com
-python3 -m reposteria customer list
+# Instalar dependencias
+composer install
 
-# Inventario
-python3 -m reposteria inventory add --name Harina --unit kg --cost 2.0 --quantity 10
-python3 -m reposteria inventory list
-python3 -m reposteria inventory adjust --id 1 --delta -0.5
+# Generar clave de aplicación
+php artisan key:generate
 
-# Recetas (ingredientes: item_id:cantidad,...)
-python3 -m reposteria recipe add --name "Pastel" --yield-units 2 --ingredients "1:1.5"
-python3 -m reposteria recipe list
-python3 -m reposteria recipe cost --id 1 --margin 0.3
+# La base de datos SQLite se crea automáticamente
+touch database/database.sqlite
 
-# Pedidos y cotización (items: recipe_id:cantidad[:precio_unitario],...)
-python3 -m reposteria order quote --items "1:3" --margin 0.3
-python3 -m reposteria order create --customer-id 1 --items "1:3" --confirm
-python3 -m reposteria order list
-python3 -m reposteria order show --id 1
+# Ejecutar migraciones
+php artisan migrate
 
-# Facturas
-python3 -m reposteria invoice create --order-id 1
-python3 -m reposteria invoice show --id 1
-python3 -m reposteria invoice list
+# Iniciar el servidor
+php artisan serve
 ```
 
-Usa `--db /ruta/archivo.db` para apuntar a otra base.
+Luego accede a http://localhost:8000/admin para el panel de Filament.
+
+## Uso
+Desde el panel de administración (`/admin`):
+1. Agrega clientes en **Clientes**.
+2. Agrega insumos en **Inventario** (nombre, unidad, costo, cantidad).
+3. Crea recetas en **Recetas** con sus ingredientes.
+4. Crea pedidos en **Pedidos** (selecciona cliente, agrega ítems de receta).
+5. Confirma pedidos para descontar inventario automáticamente.
+6. Genera facturas en **Facturas** desde pedidos confirmados.
 
 ## Pruebas
 ```bash
-python3 -m unittest discover -s tests -p 'test*.py' -v
+php artisan test
+```
+
+Ejecuta las 12 pruebas unitarias que cubren modelos, relaciones y lógica de negocio (costo de receta, confirmación de pedido, unicidad de número de factura, etc.).
+
+## Estructura
+```
+app/
+  Models/           - Modelos Eloquent (Customer, InventoryItem, Recipe, etc.)
+  Filament/
+    Resources/      - Recursos CRUD de Filament (CustomerResource, etc.)
+database/
+  migrations/       - Migraciones de base de datos
+tests/
+  Unit/             - Pruebas unitarias (12 tests)
 ```
